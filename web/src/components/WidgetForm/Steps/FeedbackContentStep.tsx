@@ -1,7 +1,9 @@
 import { ArrowLeft } from "phosphor-react";
 import { FormEvent, useState } from "react";
 import { FeedbackType, feedbackTypes } from "..";
+import { sendFeedback } from "../../../service/feedback-service";
 import { CloseButton } from "../../CloseButton";
+import { Loading } from "../Loading";
 import { ScreenshotButton } from "../ScreenshotButton";
 
 interface FeedbackContentStepProps {
@@ -13,17 +15,19 @@ interface FeedbackContentStepProps {
 export function FeedbackContentStep({ feedbackType, onFeedbackRestartRequested, onFeedbackSent }: FeedbackContentStepProps) {
     const [comment, setComment] = useState('')
     const [screenshot, setScreenshot] = useState<string | null>(null)
+    const [isSendingFeedback, setIsSendingFeedback] = useState(false)
 
     const feedbackTypeInfo = feedbackTypes[feedbackType];
 
-    function handleSubmitFeedback(event: FormEvent) {
+    async function handleSubmitFeedback(event: FormEvent) {
         event.preventDefault();
-
-        console.log({
-            screenshot,
-            comment
-        })
-
+        setIsSendingFeedback(true);
+        sendFeedback({
+            type: feedbackType,
+            comment: comment,
+            screenshot: screenshot
+        });
+        setIsSendingFeedback(false)
         onFeedbackSent()
     }
 
@@ -51,6 +55,7 @@ export function FeedbackContentStep({ feedbackType, onFeedbackRestartRequested, 
                     scrollbar-track-transparent scrollbar-thin"
                     placeholder="Conte com detalhes o que está acontecendo..."
                     onChange={event => setComment(event.target.value)}
+                    disabled={isSendingFeedback}
                 ></textarea>
 
                 <footer className="flex gap-2 mt-2">
@@ -65,9 +70,9 @@ export function FeedbackContentStep({ feedbackType, onFeedbackRestartRequested, 
                         focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-zinc-900 focus:ring-brand-500
                         transition-colors
                         disabled:opacity-50 disabled:hover:bg-brand-500"
-                        disabled={comment.length === 0}
+                        disabled={comment.length === 0 || isSendingFeedback}
                     >
-                        Enviar feedback
+                        {isSendingFeedback? <Loading /> :  'Enviar feedback'}
                     </button>
                 </footer>
             </form>
